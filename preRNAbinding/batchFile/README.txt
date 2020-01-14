@@ -1,15 +1,6 @@
-To plot distance histograms of protein binding sites to all types of pre-RNA junctions (intron-exon and exon-intron, etc.), bedtools closest requires post-processing to isolate pertinent information.  A batch script that does that post-processing is linked below, and it also uses ngs.plot.r to create exon and genebody distance graphs.
+To plot distance histograms of protein binding sites to all types of pre-RNA junctions (intron-exon and exon-intron, etc.), closestBed (also called bedtools closest) requires post-processing to isolate pertinent information, limit results to flanking regions, and not double-count with the histogram if the regions are short. Also ngs.plot.r is used to create exon and genebody distance graphs.
 
-For instructions and a one-command batch script working example, download from directory: https://drive.google.com/open?id=1PnudvWR_xbyfqaJJve5R44PHeCyQBBRr file preRNAbinding.tar by right-clicking the TAR file and selecting "Download".  Untarring that file creates a subdirectory "preRNAbinding", which contains the contents of the TAR file.
-# To untar:
-tar -xvf preRNAbinding.tar
-cd preRNAbinding
-ls
-# Expect to see a working directory "batchFile" and an example of a working directory after a completed run "afterRunningBatchFile".
-cd batchFile
-ls
-vi README.txt
-# This readme contains the contents of this forum post plus more background information.
+For instructions and a one-command batch script working example, open the preRNAbinding folder then open the batchFile folder and open preRNAbinding.s
 
 "batchFile" contains the batch script "preRNAbinding.s" and the input files needed to generate output data files, after which the contents of directory "batchFile" should be the same as the contents of "afterRunningBatchFile".
 
