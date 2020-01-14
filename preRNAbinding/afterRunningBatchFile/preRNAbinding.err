@@ -1,0 +1,15 @@
+mv: cannot stat ‘result.txt’: No such file or directory
+mv: cannot stat ‘hglft_genome_*.bed’: No such file or directory
+mv: cannot stat ‘hglft_genome_*.bed’: No such file or directory
+
+The following have been reloaded with a version change:
+  1) openmpi/intel/2.0.3 => openmpi/intel/2.0.1
+
+Warning message:
+'isNotPrimaryRead' is deprecated.
+Use 'isSecondaryAlignment' instead.
+See help("Deprecated") 
+Warning message:
+'isNotPrimaryRead' is deprecated.
+Use 'isSecondaryAlignment' instead.
+See help("Deprecated") 

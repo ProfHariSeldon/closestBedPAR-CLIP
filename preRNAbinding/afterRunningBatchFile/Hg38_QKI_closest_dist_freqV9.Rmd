@@ -1,0 +1,193 @@
+---
+title: "R Notebook"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+# NAME: Hg38_QKI_closest_dist_freqV9.Rmd - takes output files from work5v9cleaned.s and makes histograms of QKI binding frequency (y-axis) at distances (x-axis) from the junctions inside of pre-RNA.  I ran this in R Studio on my local Windows machine, but R Stuio can also be installed on Mac and Linux.
+
+# SYNOPSIS:
+# sbatch work5v9cleaned.s
+# # To monitor sbatch progress type squeue -u [username], e.g.: squeue -u thl312
+# Once the sbatch is done, open "Hg38_QKI_closest_dist_freqV9.Rmd" in R Studio and click Knit to output an HTML file that contains PNG files that are the QKI binding frequency histograms
+
+# the code below is written in the form of an example, which generates graphs of QKI binding frequency near pre-RNA junctions, used in the attached thesis "Lipscomb_Thomas_Thesis.pdf"
+
+# to understand the structure of pre-RNA see attached "Gene_structure_eukaryote_2_annotated.png"
+
+# DESCRIPTION:
+# For explanations about how Figure 14, Figure 16, Figure 17, Figure 18, and Figure 20 were calculated differently to account for their different biological junctions see the DESCRIPTION part of work5v9cleaned.s near the top
+# (e.g. for the 5' UTR-first exon junction only the first exon is included not any other exons, unlike the intron-exon junction which includes all but the first exon because the first exon is part of the 5' UTR-first exon junction not the intron-exon junction)
+
+# this Rmd script is very simple.  All it does is load files using read.table and generate histograms using ggplot2's qplot function
+
+# AUTHOR:
+# Thomas H. Lipscomb
+# New York University 2018 MS thesis
+
+# REPORTING BUGS:
+# HTTP
+
+# COPYRIGHT:
+# freeware copyleft
+
+# for ngs.plot (not used anymore because "work5v9cleaned.s" runs it on the server, which is faster, and I never could figure out how to load the hg19 genome file into R Studio for use in ngs.plot)
+# install.packages("doMC", dep=T)
+# install.packages("caTools", dep=T)
+# install.packages("utils", dep=T)
+# source("http://bioconductor.org/biocLite.R")
+# biocLite( "BSgenome" )
+# biocLite( "Rsamtools" )
+# biocLite( "ShortRead" )
+# https://github.com/shenlab-sinai/ngsplot
+
+# START SCRIPT
+
+library("ggplot2")
+# install.packages("plotly")
+# library("plotly")
+# library("Hmisc")
+
+# optional
+# install.packages("swirl", dependencies = TRUE)
+# library("digest")
+
+lineargenestart = read.table("hg38_QKI_closest_gene_noWeirdChr_PARCLIP_overlap_regionstart.bed", header=F)
+lineargeneend = read.table("hg38_QKI_closest_gene_noWeirdChr_PARCLIP_overlap_regionend.bed", header=F)
+circularstart= read.table("hg38_QKI_closest_circgene_noWeirdChr_PARCLIP_overlap_regionstart.bed", header=F)
+circularend = read.table("hg38_QKI_closest_circgene_noWeirdChr_PARCLIP_overlap_regionend.bed", header=F)
+CDSstart = read.table("hg38_QKI_closest_CDS_noWeirdChr_PARCLIP_overlap_regionstart.bed", header=F)
+CDSend = read.table("hg38_QKI_closest_CDS_noWeirdChr_PARCLIP_overlap_regionend.bed", header=F)
+linearexonstart = read.table("hg38_QKI_closest_exons_noWeirdChr_PARCLIP_overlap_regionstart.bed", header=F)
+linearexonend = read.table("hg38_QKI_closest_exons_noWeirdChr_PARCLIP_overlap_regionend.bed", header=F)
+intronstart = read.table("hg38_QKI_closest_introns_noWeirdChr_PARCLIP_overlap_regionstart.bed", header=F)
+intronend = read.table("hg38_QKI_closest_introns_noWeirdChr_PARCLIP_overlap_regionend.bed", header=F)
+linearexonstart2 = read.table("hg38_QKI_closest_exons_noWeirdChr_PARCLIP_overlap_exonstart.bed", header=F)
+linearexonend2 = read.table("hg38_QKI_closest_introns_noWeirdChr_PARCLIP_overlap_exonend.bed", header=F)
+fivepexon = read.table("hg38_QKI_closest_5p_noWeirdChr_PARCLIP_overlap_regionend_firstexon.bed", header=F)
+exonthreep = read.table("hg38_QKI_closest_3p_noWeirdChr_PARCLIP_overlap_regionstart_lastexon.bed", header=F)
+cassetteexonstart = read.table("hg38_QKI_closest_cassette_exons_noWeirdChr_PARCLIP_overlap_regionstart.bed", header=F)
+cassetteexonend = read.table("hg38_QKI_closest_cassette_exons_noWeirdChr_PARCLIP_overlap_regionend.bed", header=F)
+fivepstart = read.table("hg38_QKI_closest_5p_noWeirdChr_PARCLIP_overlap_regionstart.bed", header=F)
+fivepend = read.table("hg38_QKI_closest_5p_noWeirdChr_PARCLIP_overlap_regionend.bed", header=F)
+threepstart = read.table("hg38_QKI_closest_3p_noWeirdChr_PARCLIP_overlap_regionstart.bed", header=F)
+threepend = read.table("hg38_QKI_closest_3p_noWeirdChr_PARCLIP_overlap_regionend.bed", header=F)
+circularstart100to3000 = read.table("hg38_QKI_closest_circgene_noWeirdChr_100to3000_PARCLIP_overlap_regionstart.bed", header=F)
+circularend100to3000 = read.table("hg38_QKI_closest_circgene_noWeirdChr_100to3000_PARCLIP_overlap_regionend.bed", header=F)
+circularstartgreaterthan3000 = read.table("hg38_QKI_closest_circgene_noWeirdChr_greaterthan3000_PARCLIP_overlap_regionstart.bed", header=F)
+circularendgreaterthan3000 = read.table("hg38_QKI_closest_circgene_noWeirdChr_greaterthan3000_PARCLIP_overlap_regionend.bed", header=F)
+circularnoexonstart= read.table("hg38_QKI_closest_circgene_notexons_noWeirdChr_PARCLIP_overlap_regionstart.bed", header=F)
+circularnoexonend = read.table("hg38_QKI_closest_circgene_notexons_noWeirdChr_PARCLIP_overlap_regionend.bed", header=F)
+cassetteexonnoexonstart = read.table("hg38_QKI_closest_cassette_exons_notexons_noWeirdChr_PARCLIP_overlap_regionstart.bed", header=F)
+cassetteexonnoexonend = read.table("hg38_QKI_closest_cassette_exons_notexons_noWeirdChr_PARCLIP_overlap_regionend.bed", header=F)
+fivepnointronend = read.table("hg38_QKI_closest_5p_notintrons_noWeirdChr_PARCLIP_overlap_regionend.bed", header=F)
+threepnointronstart = read.table("hg38_QKI_closest_3p_notintrons_noWeirdChr_PARCLIP_overlap_regionstart.bed", header=F)
+
+# set text size for all graphs.  WARNING, if the title font is too large it goes off the square image and does not wrap around.
+theme_set(theme_gray(base_size = 20))
+
+# The start or end of a region is zero (eg. the TSS is zero in lineargenestart and the TES is zero in lineargeneend)
+
+# qplot(lineargenestart$V1, geom="histogram", main="Frequency of QKI binding sites around the start of a gene (TSS)", xlab="distance", ylab="frequency", col=I("white"))
+# qplot(lineargeneend$V1, geom="histogram", main="Frequency of QKI binding sites around the end of a gene (TES)", xlab="distance", ylab="frequency", col=I("white"))
+
+# qplot(lineargenestart$V1, geom="histogram", xlim=c(-300,300), main="Frequency of QKI binding sites around the start of a gene (TSS)", xlab="distance", ylab="frequency", col=I("white"), binwidth = 10)
+# qplot(lineargeneend$V1, geom="histogram", xlim=c(-300,300), main="Frequency of QKI binding sites around the end of a gene (TES)", xlab="distance", ylab="frequency", col=I("white"), binwidth = 10)
+
+# main="Frequency of QKI binding sites around the start of a circular RNA"
+qplot(circularstart$V1, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,50))
+# main="Frequency of QKI binding sites around the end of a circular RNA"
+qplot(circularend$V1, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,50))
+
+# main="Frequency of QKI binding sites around the start of a circular RNA, no exons upstream (only intron-circRNA)"
+qplot(circularnoexonstart$V1, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,50), main="Figure 20 (left), start of circRNA")
+# main="Frequency of QKI binding sites around the end of a circular RNA, no exons downstream (only circRNA-intron)"
+qplot(circularnoexonend$V1, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,50), main="Figure 20 (right), end of circRNA")
+
+# main="Frequency of QKI binding sites around the start of a circular RNA 100 to 3000 nt"
+qplot(circularstart100to3000$V1, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,50))
+# main="Frequency of QKI binding sites around the end of a circular RNA 100 to 3000 nt"
+qplot(circularend100to3000$V1, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,50))
+
+# main="Frequency of QKI binding sites around the start of a circular RNA >3000 nt"
+qplot(circularstartgreaterthan3000$V1, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,50))
+# main="Frequency of QKI binding sites around the end of a circular RNA >3000 nt"
+qplot(circularendgreaterthan3000$V1, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,50))
+
+# main="Frequency of QKI binding sites around the start of a circular RNA"
+qplot(circularstart$V1, geom="histogram", xlim=c(-1000,1000), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,50))
+# main="Frequency of QKI binding sites around the end of a circular RNA"
+qplot(circularend$V1, geom="histogram", xlim=c(-1000,1000), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,50))
+
+# main="Frequency of QKI binding sites around the start of a circular RNA 100 to 3000 nt"
+qplot(circularstart100to3000$V1, geom="histogram", xlim=c(-1000,1000), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,50))
+# main="Frequency of QKI binding sites around the end of a circular RNA 100 to 3000 nt"
+qplot(circularend100to3000$V1, geom="histogram", xlim=c(-1000,1000), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,50))
+
+# main="Frequency of QKI binding sites around the start of a circular RNA >3000 nt"
+qplot(circularstartgreaterthan3000$V1, geom="histogram", xlim=c(-1000,1000), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,50))
+# main="Frequency of QKI binding sites around the end of a circular RNA >3000 nt"
+qplot(circularendgreaterthan3000$V1, geom="histogram", xlim=c(-1000,1000), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,50))
+
+# qplot(CDSstart$V1, geom="histogram", xlim=c(-300,300), main="Frequency of QKI binding sites around the start of a CDS", xlab="distance", ylab="frequency", col=I("white"), binwidth = 10)
+# qplot(CDSend$V1, geom="histogram", xlim=c(-300,300), main="Frequency of QKI binding sites around the end of a CDS", xlab="distance", ylab="frequency", col=I("white"), binwidth = 10)
+
+# main="Frequency of QKI binding sites around 5' UTR exon junction, inside only (5' UTR-first exon junction, only first exon nothing else not introns not other exons)"
+qplot(fivepexon, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,150), main="Should be the same as Figure 17 (left)")
+# main="Frequency of QKI binding sites around exon 3' UTR junction, inside only (last exon-3' UTR junction, only last exon nothing else not introns not other exons)"
+qplot(exonthreep, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,150), main="Should be the same as Figure 17 (right)")
+
+# main="Frequency of QKI binding sites around 5' UTR exon junction, downstream of 5' UTR not including introns"
+qplot(fivepnointronend, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,150), main="Figure 17 (left), end of 5' UTR")
+# main="Frequency of QKI binding sites around exon 3' UTR junction, upstream of 3' UTR not including introns"
+qplot(threepnointronstart, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,150), main="Figure 17 (right), start of 3' UTR")
+
+# main="Frequency of QKI binding sites around intron-exon junction, inside only (see PART 1 of DESCRIPTION: at the top of "work5v9cleaned.s" for the explanation why this histogram measures distances from within both regions)"
+qplot(linearexonstart2$V1, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,170), main="Figure 14 (left), intron-exon junction")
+# main="Frequency of QKI binding sites around exon-intron junction, inside only (see PART 1 of DESCRIPTION: at the top of "work5v9cleaned.s" for the explanation why this histogram measures distances from within both regions)", 
+qplot(linearexonend2$V1, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,170), main="Figure 14 (right), exon-intron junction")
+
+# qplot(linearexonstart2$V1, geom="histogram", main="Frequency of QKI binding sites around intron-exon junction, unlimited", xlab="distance", ylab="frequency", col=I("white"), binwidth = 10)
+# qplot(linearexonend2$V1, geom="histogram", main="Frequency of QKI binding sites around exon-intron junction, unlimited", xlab="distance", ylab="frequency", col=I("white"), binwidth = 10)
+
+# qplot(linearexonstart$V1, geom="histogram", xlim=c(-300,300), main="Frequency of QKI binding sites around the start of an exon", xlab="distance", ylab="frequency", col=I("white"), binwidth = 10)
+# qplot(linearexonend$V1, geom="histogram", xlim=c(-300,300), main="Frequency of QKI binding sites around the end of an exon", xlab="distance", ylab="frequency", col=I("white"), binwidth = 10)
+
+# main="Frequency of QKI binding sites around the start of a cassette exon"
+qplot(cassetteexonstart$V1, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,17))
+# main="Frequency of QKI binding sites around the end of a cassete exon"
+qplot(cassetteexonend$V1, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,17))
+
+# main="Frequency of QKI binding sites around the start of a cassette exon without exons flanking"
+qplot(cassetteexonnoexonstart$V1, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,17), main="Figure 16 (left), start of cassette exon")
+# main="Frequency of QKI binding sites around the end of a cassete exon without exons flanking"
+qplot(cassetteexonnoexonend$V1, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,17), main="Figure 16 (right), end of cassette exon")
+
+# qplot(intronstart$V1, geom="histogram", xlim=c(-300,300), main="Frequency of QKI binding sites around the start of an intron", xlab="distance", ylab="frequency", col=I("white"), binwidth = 10)
+# qplot(intronend$V1, geom="histogram", xlim=c(-300,300), main="Frequency of QKI binding sites around the end of an intron", xlab="distance", ylab="frequency", col=I("white"), binwidth = 10)
+
+# main="Frequency of QKI binding sites around the start of a 5' UTR"
+qplot(fivepstart$V1, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,130))
+# trim -300 to 0 because that is beyond the RNA (the RNA starts with the 5' UTR)
+# NOTE: the binwidth is the SAME even though the trimmed histogram below has wider bars than the histogram above
+qplot(fivepstart$V1, geom="histogram", xlim=c(0,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,130), main="Figure 18 (left), start of 5' UTR")
+# qplot(fivepend$V1, geom="histogram", xlim=c(-300,300), main="Frequency of QKI binding sites around the end of a 5' UTR", xlab="distance", ylab="frequency", col=I("white"), binwidth = 10)
+
+# qplot(threepstart$V1, geom="histogram", xlim=c(-300,300), main="Frequency of QKI binding sites around the start of a 3' UTR", xlab="distance", ylab="frequency", col=I("white"), binwidth = 10)
+
+# main="Frequency of QKI binding sites around the end of a 3' UTR"
+qplot(threepend$V1, geom="histogram", xlim=c(-300,300), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,130))
+# trim 0 to 300 because that is beyond the RNA (the RNA ends with the 3' UTR)
+# NOTE: the binwidth is the SAME even though the trimmed histogram below has wider bars than the histogram above
+qplot(threepend$V1, geom="histogram", xlim=c(-300,0), xlab="distance (nt)", ylab="frequency of QKI binding sites", col=I("white"), binwidth = 10, ylim = range(0,130), main="Figure 18 (right), end of 3' UTR")
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
